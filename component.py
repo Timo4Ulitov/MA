@@ -3,7 +3,6 @@ from uuid import UUID, uuid4
 from datetime import datetime
 import unittest
 
-
 player_url = 'http://localhost:8000'
 get_players_url = f'{player_url}/get_players'
 add_player_url = f'{player_url}/add_player'
