@@ -1,10 +1,43 @@
 from fastapi import FastAPI, HTTPException, status, Depends
 from typing import Annotated
+from fastapi import FastAPI, HTTPException, status, Form, Header
 from model.player import Player
 import uvicorn
 import os
 from database import database as database
 from sqlalchemy.orm import Session
+
+@app.post("/get_token")
+async def get_token(username: str = Form(...), password: str = Form(...)):
+    try:
+        token = keycloak_openid.token(grant_type=["password"],
+                                      username=username,
+                                      password=password)
+        return token
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=400, detail="Не удалось получить токен")
+
+
+def check_roles(token):
+    try:
+        token_info = keycloak_openid.introspect(token)
+        if "test" not in token_info["realm_access"]["roles"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        return token_info
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid token or access denied")
+
+@app.get("/health", status_code=status.HTTP_200_OK)
+async def service_alive(token: str = Header()):
+    if (check_roles(token)):
+        return {'message': 'service alive'}
+    else:
+        return "Wrong JWT Token"
+
+
+
+
 
 app = FastAPI()
 
