@@ -7,6 +7,29 @@ import os
 from database import database as database
 from sqlalchemy.orm import Session
 
+
+
+
+
+
+
+app = FastAPI()
+
+app = FastAPI()
+database.Base.metadata.create_all(bind=database.engine)
+
+
+def get_db():
+    db = database.SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+db_dependency = Annotated[Session, Depends(get_db)]
+
+
 @app.post("/get_token")
 async def get_token(username: str = Form(...), password: str = Form(...)):
     try:
@@ -34,32 +57,6 @@ async def service_alive(token: str = Header()):
         return {'message': 'service alive'}
     else:
         return "Wrong JWT Token"
-
-
-
-
-
-app = FastAPI()
-
-app = FastAPI()
-database.Base.metadata.create_all(bind=database.engine)
-
-
-def get_db():
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-db_dependency = Annotated[Session, Depends(get_db)]
-
-
-@app.get("/health", status_code=status.HTTP_200_OK)
-async def player_health():
-    return {'message': 'service is active'}
-
 
 @app.get("/get_players")
 async def get_players(db: db_dependency):
